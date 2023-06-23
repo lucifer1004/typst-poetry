@@ -1,4 +1,21 @@
-#let poem(title: none, author: none, date: none, linenumber: (left: "1:1", right: none, current: false), ..parts) = {
+#let poem(
+    title: none, 
+    author: none, 
+    date: none,
+    update: none,
+    meta: (
+        date: (
+            prefix: "",
+            suffix: "written",
+        ),
+        update: (
+            prefix: "",
+            suffix: "modified",
+        ),
+    ),
+    linenumber: (left: "1:1", right: none, current: false), 
+    ..parts
+) = {
     set align(center)
     set par(justify: true, leading: 1em)
 
@@ -24,37 +41,55 @@
     }
 
     let partcnt = parts.pos().len()
+    let contents = ()
+
     for (partidx, body) in parts.pos().enumerate() {
-        if partcnt > 1 {
-            if partidx > 0 {
-                v(2em, weak: true)
+        let currentline = ()
+        let parttitle = none
+        if body.has("children") {
+            for item in body.children {
+                if "heading(body:" in repr(item) {
+                    parttitle = item.body
+                    break
+                }
             }
-            heading(level: 2, numbering("I", partidx + 1))
+        }
+
+        if partcnt > 1 or parttitle != none {
+            contents.push(none)
+            contents.push({
+                if partidx > 0 {
+                    v(2em)
+                }
+                align(center, heading(level: 2)[
+                    #if partcnt > 1 {
+                        numbering("I", partidx + 1)
+                    }
+                    #parttitle
+                ])
+            })
+            contents.push(none)
         }
 
         if not body.has("children") {
-            return
+            continue
         }
 
         let lineidx = 1
         let currentlineidx = 1
         let stanzaidx = 1
 
-        let contents = ()
-        let currentline = ()
         for item in body.children {
             if repr(item) == "[ ]" {
                 continue
-            } else if repr(item) != "linebreak()" and repr(item) != "parbreak()" {
+            } else if repr(item) != "linebreak()" and repr(item) != "parbreak()" and "heading(body:" not in repr(item) {
                 currentline.push(item)
             }
 
             if repr(item) == "linebreak()" or repr(item) == "parbreak()" {
                 if currentline.join() != none {
                     contents.push(linenumbering(lineidx, currentlineidx, "left"))
-
                     contents.push(currentline.join())
-
                     contents.push(linenumbering(lineidx, currentlineidx, "right"))
                 }
             }
@@ -84,28 +119,38 @@
 
         if currentline.join() != none  {
             contents.push(linenumbering(lineidx, currentlineidx, "left"))
-
             contents.push(currentline.join())
-
             contents.push(linenumbering(lineidx, currentlineidx, "right"))
         }
-
-        grid(
-            columns: (1fr, auto, 1fr),
-            none,
-            {
-                set align(left)
-                grid(
-                    columns: (auto, auto, auto),
-                    gutter: 1em,
-                    ..contents,
-                )
-            },
-            none,
-        )
     }
 
+    grid(
+        columns: (1fr, auto, 1fr),
+        none,
+        {
+            set align(left)
+            grid(
+                columns: (auto, auto, auto),
+                gutter: 1em,
+                ..contents,
+            )
+        },
+        none,
+    )
+
     if date != none {
-        align(right, date)
+        align(right, [
+            #meta.date.prefix
+            #date
+            #meta.date.suffix
+        ])
+
+        if update != none {
+            align(right, [
+                #meta.update.prefix
+                #update
+                #meta.update.suffix
+            ])
+        }
     }
 }

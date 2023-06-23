@@ -3,7 +3,8 @@
 #poem(
     title: "The Road Not Taken",
     author: "Robert Frost",
-    date: "Aug 1915"
+    date: "Aug 1915",
+    update: "Jan 1916",
 )[
     Two roads diverged in a yellow wood,\
     And sorry I could not travel both\
@@ -28,5 +29,12 @@
     Two roads diverged in a wood, and I—\
     I took the one less traveled by,\
     And that has made all the difference.
-]
+][
+    Another section
+][
+    // Empty section
+][
+    = Section with title
 
+    Another section with title
+]
